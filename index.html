@@ -3,239 +3,344 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moho ʻĀina — District Targeting Dashboard</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>District Priority Index</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <style>
-    body { background: #0f172a; font-family: system-ui, sans-serif; }
-    .medal-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-    .medal-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
-    .medal-3 { background: linear-gradient(135deg, #cd7f32, #a16207); }
-    .medal-4 { background: #1e3a5f; }
-    .medal-5 { background: #1e3a5f; }
-    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-    .card-hover { transition: transform 0.15s, box-shadow 0.15s; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f1117; color: #e2e8f0; font-family: 'DM Mono', 'Courier New', monospace; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #1e2130; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    .syne { font-family: 'Syne', sans-serif; }
+    .rh:hover { background: rgba(99,102,241,0.05) !important; }
+    .thb { cursor: pointer; user-select: none; }
+    .thb:hover { color: #e2e8f0 !important; }
+    input[type=range] { -webkit-appearance: none; height: 3px; border-radius: 2px; outline: none; cursor: pointer; width: 100%; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; cursor: pointer; border: 2px solid #0f1117; }
+    .pill { border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 500; }
+    .btn { background: #1e2130; color: #94a3b8; border: 1px solid #334155; border-radius: 5px; padding: 4px 12px; font-size: 10px; font-family: inherit; cursor: pointer; letter-spacing: .05em; transition: all .15s; }
+    .btn:hover { color: #e2e8f0; border-color: #475569; }
+    .btn.active { background: #6366f1; color: #fff; border-color: #6366f1; }
   </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const HD_DATA = {
-  no_computer: [
-    {rank:1, district:"HD28", value:"8.8%"}, {rank:2, district:"HD3", value:"8.0%"},
-    {rank:3, district:"HD45", value:"7.3%"}, {rank:4, district:"HD9", value:"7.0%"},
-    {rank:5, district:"HD23", value:"7.0%"}
-  ],
-  poverty: [
-    {rank:1, district:"HD4", value:"21.5%"}, {rank:2, district:"HD28", value:"20.6%"},
-    {rank:3, district:"HD45", value:"16.4%"}, {rank:4, district:"HD3", value:"15.9%"},
-    {rank:5, district:"HD5", value:"15.5%"}
-  ],
-  edu_below_ba: [
-    {rank:1, district:"HD45", value:"83.7%"}, {rank:2, district:"HD44", value:"81.0%"},
-    {rank:3, district:"HD36", value:"79.4%"}, {rank:4, district:"HD3", value:"77.4%"},
-    {rank:5, district:"HD42", value:"76.7%"}
-  ],
-  public_health_ins: [
-    {rank:1, district:"HD45", value:"36.1%"}, {rank:2, district:"HD4", value:"34.4%"},
-    {rank:3, district:"HD28", value:"33.4%"}, {rank:4, district:"HD5", value:"32.9%"},
-    {rank:5, district:"HD13", value:"29.3%"}
-  ],
-  median_income_high: [
-    {rank:1, district:"HD19", value:"$157,182"}, {rank:2, district:"HD18", value:"$154,919"},
-    {rank:3, district:"HD51", value:"$150,532"}, {rank:4, district:"HD48", value:"$141,881"},
-    {rank:5, district:"HD41", value:"$137,950"}
-  ],
-  median_income_low: [
-    {rank:1, district:"HD4", value:"$57,007"}, {rank:2, district:"HD28", value:"$57,784"},
-    {rank:3, district:"HD5", value:"$63,656"}, {rank:4, district:"HD23", value:"$65,875"},
-    {rank:5, district:"HD3", value:"$73,277"}
-  ],
-  snap: [
-    {rank:1, district:"HD45", value:"31.8%"}, {rank:2, district:"HD3", value:"27.6%"},
-    {rank:3, district:"HD4", value:"25.4%"}, {rank:4, district:"HD28", value:"24.8%"},
-    {rank:5, district:"HD36", value:"23.7%"}
-  ],
-  incumbent_career: [
-    {rank:1, district:"HD12", value:"22.2 yrs"}, {rank:2, district:"HD26", value:"19.3 yrs"},
-    {rank:3, district:"HD17", value:"15.3 yrs"}, {rank:4, district:"HD19", value:"15.3 yrs"},
-    {rank:5, district:"HD31", value:"15.3 yrs"}
-  ],
-  turnout_reg: [
-    {rank:1, district:"HD2", value:"49.96%"}, {rank:2, district:"HD1", value:"45.65%"},
-    {rank:3, district:"HD37", value:"43.31%"}, {rank:4, district:"HD33", value:"41.22%"},
-    {rank:5, district:"HD27", value:"40.00%"}
-  ],
-  turnout_elig: [
-    {rank:1, district:"HD2", value:"41.33%"}, {rank:2, district:"HD1", value:"39.49%"},
-    {rank:3, district:"HD37", value:"38.70%"}, {rank:4, district:"HD18", value:"38.67%"},
-    {rank:5, district:"HD19", value:"38.15%"}
-  ],
-  reg_elig_gap: [
-    {rank:1, district:"HD31", value:"14.26%"}, {rank:2, district:"HD50", value:"12.21%"},
-    {rank:3, district:"HD46", value:"11.76%"}, {rank:4, district:"HD23", value:"11.05%"},
-    {rank:5, district:"HD32", value:"10.69%"}
-  ]
+const { useState, useMemo } = React;
+
+// Index: [noComp, poverty, edu, healthIns, income, snap, incumbentLen, tReg, tElig, regEligGap]
+// Direction: +1 = higher raw → higher priority; -1 = invert (higher raw = better, so flip)
+const DIRS = [1, 1, 1, 1, -1, 1, 1, -1, -1, 1];
+
+const RAW = {
+  SD1: [5.60,13.10,66.30,21.00,80487, 20.10,21.3,46.89,36.97,9.92],
+  SD2: [4.60,19.90,76.40,32.50,63622, 27.60,11.3,35.08,29.87,5.21],
+  SD3: [3.50,12.00,66.60,28.30,80199, 12.40,7.3, 34.07,29.73,4.35],
+  SD4: [3.90,9.30, 65.40,23.70,96992, 10.10,3.3, 37.32,35.52,1.79],
+  SD5: [5.30,8.00, 72.70,14.90,102758,10.30,7.3, 28.35,26.08,2.27],
+  SD6: [3.20,8.20, 66.20,18.90,94701, 8.40, 19.3,21.30,20.51,0.79],
+  SD7: [4.20,11.20,68.20,24.70,95970, 12.40,10.7,27.55,26.67,0.88],
+  SD8: [3.00,8.50, 69.90,25.30,97668, 11.30,15.3,31.33,27.39,3.95],
+  SD9: [2.60,6.30, 41.50,12.90,145792,2.90, 13.3,38.95,35.81,3.15],
+  SD10:[4.50,10.60,55.60,16.30,84220, 7.80, 39.3,34.43,26.43,7.99],
+  SD11:[4.70,10.20,47.60,15.70,90058, 9.60, 39.3,36.54,27.90,8.63],
+  SD12:[4.00,12.40,51.50,18.00,75933, 8.20, 7.3, 31.73,24.55,7.18],
+  SD13:[7.90,13.60,64.30,23.80,73966, 15.70,19.3,33.87,25.33,8.55],
+  SD14:[5.20,8.80, 71.70,23.40,104963,15.10,44.2,30.01,20.80,9.21],
+  SD15:[2.90,7.90, 68.20,16.40,92806, 12.10,23.3,25.41,13.44,11.98],
+  SD16:[4.10,4.80, 59.90,10.30,122206,4.60, 11.3,38.77,31.24,7.53],
+  SD17:[3.20,5.90, 63.60,14.90,119845,8.80, 21.3,35.02,28.66,6.36],
+  SD18:[2.20,3.70, 63.30,11.20,123157,5.80, 17.3,36.15,30.22,5.93],
+  SD19:[5.30,8.50, 75.10,19.20,105171,16.10,7.3, 26.64,18.31,8.32],
+  SD20:[1.80,4.10, 65.70,14.20,133224,9.30, 21.3,23.87,17.60,6.27],
+  SD21:[2.20,7.40, 70.70,19.30,117119,14.80,1.3, 26.12,19.66,6.46],
+  SD22:[5.10,14.30,82.60,31.70,88843, 27.90,3.3, 23.87,18.10,5.77],
+  SD23:[1.70,9.50, 64.60,17.30,94684, 9.00, 11.3,26.24,17.38,8.85],
+  SD24:[3.20,6.70, 57.80,13.70,120165,7.50, 17.3,36.78,25.85,10.93],
+  SD25:[1.20,5.00, 48.10,11.90,155916,6.00, 1.3, 37.74,35.19,2.54],
+  HD1: [6.00,10.50,66.60,22.40,85122, 18.40,1.2, 45.65,39.49,6.16],
+  HD2: [4.60,14.00,63.50,19.00,78260, 18.20,1.3, 49.96,41.33,8.64],
+  HD3: [8.00,15.90,77.40,27.90,73277, 27.60,8.3, 37.49,29.45,8.03],
+  HD4: [2.10,21.50,75.20,34.40,57007, 25.40,5.3, 33.64,29.43,4.21],
+  HD5: [6.10,15.50,75.00,32.90,63656, 23.60,5.3, 36.88,31.93,4.95],
+  HD6: [2.40,8.50, 58.00,24.10,92181, 6.00, 3.3, 34.57,30.40,4.18],
+  HD7: [2.40,12.90,70.10,27.30,98570, 12.80,13.3,30.35,26.39,3.96],
+  HD8: [3.80,9.00, 63.90,22.90,93638, 9.30, 7.3, 38.06,35.73,2.32],
+  HD9: [7.00,9.60, 75.30,14.90,97326, 8.90, 13.1,25.69,21.27,4.42],
+  HD10:[3.80,5.80, 67.60,13.10,107885,8.90, 2.2, 30.24,30.32,-0.09],
+  HD11:[2.70,8.50, 63.80,19.20,88408, 7.70, 3.3, 23.49,22.75,0.74],
+  HD12:[3.60,9.60, 66.30,20.10,100604,9.80, 22.2,30.08,29.34,0.74],
+  HD13:[4.70,12.80,70.20,29.30,91926, 15.00,3.3, 24.78,24.03,0.75],
+  HD14:[3.70,8.60, 71.20,20.70,105701,12.30,3.3, 18.98,18.03,0.95],
+  HD15:[3.40,8.80, 67.70,28.20,90067, 10.90,9.3, 27.45,24.09,3.36],
+  HD16:[2.20,7.70, 69.70,21.90,100819,10.80,3.0, 34.87,29.38,5.48],
+  HD17:[3.40,9.10, 72.40,25.90,100637,12.30,15.3,31.90,28.80,3.10],
+  HD18:[1.20,3.80, 41.60,9.00, 154919,2.40, 0.7, 39.59,38.67,0.92],
+  HD19:[2.80,6.70, 38.30,12.20,157182,1.00, 15.3,39.81,38.15,1.66],
+  HD20:[3.60,7.50, 49.70,15.10,114920,6.90, 1.3, 38.14,30.37,7.77],
+  HD21:[4.30,9.10, 52.70,17.00,122500,7.90, 5.3, 36.03,29.60,6.43],
+  HD22:[3.20,9.20, 40.90,12.10,105487,6.30, 3.3, 37.85,30.23,7.61],
+  HD23:[7.00,15.00,62.50,18.90,65875, 11.60,1.3, 31.81,20.76,11.05],
+  HD24:[3.60,12.40,52.20,17.60,74554, 6.00, 5.3, 27.94,22.28,5.66],
+  HD25:[4.00,8.90, 45.10,15.00,91651, 7.50, 1.3, 37.30,30.70,6.60],
+  HD26:[4.30,11.20,53.30,19.50,75389, 10.80,19.3,33.14,25.51,7.62],
+  HD27:[6.30,7.70, 54.50,14.90,108438,7.50, 3.3, 40.00,31.83,8.17],
+  HD28:[8.80,20.60,75.80,33.40,57784, 24.80,13.3,25.71,17.07,8.64],
+  HD29:[4.10,7.70, 75.70,25.00,118510,18.30,1.3, 28.40,19.41,8.99],
+  HD30:[3.60,8.30, 75.40,24.20,90180, 19.30,1.3, 20.03,11.39,8.64],
+  HD31:[2.40,8.40, 65.60,14.30,93309, 10.20,15.3,29.35,15.09,14.26],
+  HD32:[3.60,7.30, 65.10,12.20,98889, 6.00, 1.3, 30.04,19.35,10.69],
+  HD33:[5.70,4.70, 54.50,9.90, 127333,4.80, 11.3,41.22,34.99,6.23],
+  HD34:[4.30,5.80, 66.10,13.00,109028,8.00, 13.3,36.45,26.55,9.90],
+  HD35:[6.20,7.30, 72.50,16.90,107485,9.30, 3.3, 31.69,24.67,7.02],
+  HD36:[5.50,9.40, 79.40,21.90,115741,23.70,7.3, 22.66,14.06,8.60],
+  HD37:[2.90,3.00, 58.30,9.50, 125534,4.30, 3.0, 43.31,38.70,4.60],
+  HD38:[1.50,2.90, 53.30,10.80,133504,6.10, 13.3,37.08,31.53,5.55],
+  HD39:[0.80,5.00, 67.50,13.10,124229,8.80, 3.3, 28.40,23.41,4.99],
+  HD40:[3.30,5.10, 71.70,16.70,128826,13.30,1.3, 22.80,17.81,4.99],
+  HD41:[0.90,4.50, 61.30,13.50,137950,6.80, 3.3, 23.52,15.73,7.79],
+  HD42:[1.70,7.50, 76.70,23.40,110463,19.40,3.3, 25.07,18.91,6.17],
+  HD43:[2.10,5.60, 64.00,13.30,122684,10.10,3.3, 28.18,21.38,6.80],
+  HD44:[3.00,12.10,81.00,26.60,102378,22.20,3.3, 22.85,17.69,5.16],
+  HD45:[7.30,16.40,83.70,36.10,78145, 31.80,1.3, 24.77,18.57,6.20],
+  HD46:[3.50,8.40, 73.60,17.40,87350, 11.20,7.3, 23.97,12.21,11.76],
+  HD47:[1.80,11.60,68.00,20.60,91236, 11.30,9.3, 19.76,16.68,3.08],
+  HD48:[2.50,6.40, 55.60,13.70,141881,5.90, 7.3, 38.01,32.69,5.32],
+  HD49:[3.30,10.50,62.40,18.00,125104,12.50,7.3, 36.47,27.97,8.50],
+  HD50:[2.60,5.10, 51.40,11.60,119619,4.60, 1.3, 37.98,25.77,12.21],
+  HD51:[1.20,6.30, 55.10,15.30,150532,10.00,5.3, 34.35,30.71,3.64],
 };
 
-const SD_DATA = {
-  no_computer: [
-    {rank:1, district:"SD13", value:"7.9%"}, {rank:2, district:"SD1", value:"5.6%"},
-    {rank:3, district:"SD5", value:"5.3%"}, {rank:4, district:"SD19", value:"5.3%"},
-    {rank:5, district:"SD14", value:"5.2%"}
-  ],
-  poverty: [
-    {rank:1, district:"SD2", value:"19.9%"}, {rank:2, district:"SD22", value:"14.3%"},
-    {rank:3, district:"SD13", value:"13.6%"}, {rank:4, district:"SD1", value:"13.1%"},
-    {rank:5, district:"SD12", value:"12.4%"}
-  ],
-  edu_below_ba: [
-    {rank:1, district:"SD22", value:"82.6%"}, {rank:2, district:"SD2", value:"76.4%"},
-    {rank:3, district:"SD19", value:"75.1%"}, {rank:4, district:"SD5", value:"72.7%"},
-    {rank:5, district:"SD14", value:"71.7%"}
-  ],
-  public_health_ins: [
-    {rank:1, district:"SD2", value:"32.5%"}, {rank:2, district:"SD22", value:"31.7%"},
-    {rank:3, district:"SD3", value:"28.3%"}, {rank:4, district:"SD8", value:"25.3%"},
-    {rank:5, district:"SD7", value:"24.7%"}
-  ],
-  median_income_high: [
-    {rank:1, district:"SD25", value:"$155,916"}, {rank:2, district:"SD9", value:"$145,792"},
-    {rank:3, district:"SD20", value:"$133,224"}, {rank:4, district:"SD18", value:"$123,157"},
-    {rank:5, district:"SD16", value:"$122,206"}
-  ],
-  median_income_low: [
-    {rank:1, district:"SD2", value:"$63,622"}, {rank:2, district:"SD13", value:"$73,966"},
-    {rank:3, district:"SD12", value:"$75,933"}, {rank:4, district:"SD3", value:"$80,199"},
-    {rank:5, district:"SD1", value:"$80,487"}
-  ],
-  snap: [
-    {rank:1, district:"SD22", value:"27.9%"}, {rank:2, district:"SD2", value:"27.6%"},
-    {rank:3, district:"SD1", value:"20.1%"}, {rank:4, district:"SD19", value:"16.1%"},
-    {rank:5, district:"SD13", value:"15.7%"}
-  ],
-  incumbent_career: [
-    {rank:1, district:"SD14", value:"44.2 yrs"}, {rank:2, district:"SD10", value:"39.3 yrs"},
-    {rank:3, district:"SD11", value:"39.3 yrs"}, {rank:4, district:"SD15", value:"23.3 yrs"},
-    {rank:5, district:"SD1", value:"21.3 yrs"}
-  ],
-  turnout_reg: [
-    {rank:1, district:"SD1", value:"46.89%"}, {rank:2, district:"SD9", value:"38.95%"},
-    {rank:3, district:"SD16", value:"38.77%"}, {rank:4, district:"SD25", value:"37.74%"},
-    {rank:5, district:"SD4", value:"37.32%"}
-  ],
-  turnout_elig: [
-    {rank:1, district:"SD1", value:"36.97%"}, {rank:2, district:"SD9", value:"35.81%"},
-    {rank:3, district:"SD4", value:"35.52%"}, {rank:4, district:"SD25", value:"35.19%"},
-    {rank:5, district:"SD16", value:"31.24%"}
-  ],
-  reg_elig_gap: [
-    {rank:1, district:"SD15", value:"11.98%"}, {rank:2, district:"SD24", value:"10.93%"},
-    {rank:3, district:"SD1", value:"9.92%"}, {rank:4, district:"SD14", value:"9.21%"},
-    {rank:5, district:"SD23", value:"8.85%"}
-  ]
-};
-
-const VARIABLES = [
-  { key: "no_computer",        label: "Without a Computer",             color: "#ef4444", icon: "💻", desc: "% households lacking computer access" },
-  { key: "poverty",            label: "Below Poverty Level",            color: "#f97316", icon: "📉", desc: "% population below poverty line" },
-  { key: "edu_below_ba",       label: "Education Below Bachelor's",     color: "#eab308", icon: "🎓", desc: "% adults without a BA degree" },
-  { key: "public_health_ins",  label: "Public Health Insurance Only",   color: "#84cc16", icon: "🏥", desc: "% enrolled in Medicaid/CHIP only" },
-  { key: "median_income_high", label: "Highest Median Income",          color: "#22c55e", icon: "💵", desc: "Top 5 median household income" },
-  { key: "median_income_low",  label: "Lowest Median Income",           color: "#ef4444", icon: "💸", desc: "Bottom 5 median household income" },
-  { key: "snap",               label: "Households on SNAP",             color: "#14b8a6", icon: "🛒", desc: "% households receiving SNAP benefits" },
-  { key: "incumbent_career",   label: "Longest Incumbent Career",       color: "#8b5cf6", icon: "🗓️", desc: "Years in office — current incumbent" },
-  { key: "turnout_reg",        label: "Turnout (Registered Voters)",    color: "#3b82f6", icon: "🗳️", desc: "2024 Primary — % registered voters who voted" },
-  { key: "turnout_elig",       label: "Turnout (Eligible Voters)",      color: "#06b6d4", icon: "📊", desc: "2024 Primary — % eligible voters who voted" },
-  { key: "reg_elig_gap",       label: "Reg–Eligible Turnout Gap",       color: "#a855f7", icon: "📐", desc: "Gap between registered & eligible voter turnout" },
+const GROUPS = [
+  { key:"ses", label:"Socioeconomic", short:"SES", accent:"#f43f5e",
+    vars:[1,2,3,4,5], tips:["Poverty","Education","Health Ins","Income↑","SNAP"] },
+  { key:"dig", label:"Digital Access", short:"DIG", accent:"#f97316",
+    vars:[0], tips:["No Computer"] },
+  { key:"civ", label:"Low Engagement", short:"CIV", accent:"#6366f1",
+    vars:[7,8,9], tips:["Reg Turnout (inv)","Elig Turnout (inv)","Reg–Elig Gap"] },
+  { key:"inc", label:"Incumbent Tenure", short:"INC", accent:"#94a3b8",
+    vars:[6], tips:["Career Length"] },
 ];
 
-const MEDAL_STYLES = ["medal-1","medal-2","medal-3","medal-4","medal-5"];
-const RANK_LABEL   = ["🥇","🥈","🥉","4","5"];
-
-function RankCard({ item, color }) {
-  return (
-    <div className={`card-hover rounded-xl p-3 flex items-center gap-3 ${MEDAL_STYLES[item.rank-1]}`}>
-      <div className="text-xl w-8 text-center font-bold">{RANK_LABEL[item.rank-1]}</div>
-      <div className="flex-1">
-        <div className="font-bold text-white text-base">{item.district}</div>
-        <div className="text-white/80 text-sm">{item.value}</div>
-      </div>
-    </div>
-  );
+function computeStats(keys) {
+  return Array.from({length:10}, (_, v) => {
+    const vals = keys.map(d => RAW[d][v] * DIRS[v]);
+    const mean = vals.reduce((a,b)=>a+b,0) / vals.length;
+    const std = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0) / vals.length) || 1;
+    return { mean, std };
+  });
 }
 
-function VarSection({ varDef, data }) {
-  return (
-    <div className="bg-slate-800 rounded-2xl p-5 flex flex-col gap-3">
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-2xl">{varDef.icon}</span>
-        <div>
-          <div className="font-bold text-white text-sm">{varDef.label}</div>
-          <div className="text-slate-400 text-xs">{varDef.desc}</div>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        {data.map(item => <RankCard key={item.rank} item={item} color={varDef.color} />)}
-      </div>
-    </div>
-  );
+function calcScores(keys, stats, wArr) {
+  const total = wArr.reduce((a,b)=>a+b,0) || 1;
+  const nw = wArr.map(w => w/total);
+  return keys.map(d => {
+    const subs = GROUPS.map(g => {
+      const zs = g.vars.map(v => (RAW[d][v]*DIRS[v] - stats[v].mean) / stats[v].std);
+      return zs.reduce((a,b)=>a+b,0) / zs.length;
+    });
+    const master = subs.reduce((a,b,i) => a + b*nw[i], 0);
+    return { d, subs, master };
+  });
+}
+
+function heatColor(t) {
+  if (t < 0.5) {
+    const p = t*2;
+    return `rgb(${Math.round(59+p*(251-59))},${Math.round(130+p*(191-130))},${Math.round(246+p*(36-246))})`;
+  } else {
+    const p = (t-0.5)*2;
+    return `rgb(${Math.round(251+p*(220-251))},${Math.round(191+p*(38-191))},${Math.round(36+p*(38-36))})`;
+  }
 }
 
 function App() {
-  const [chamber, setChamber] = React.useState("HD");
-  const data = chamber === "HD" ? HD_DATA : SD_DATA;
+  const [weights, setWeights] = useState([25,25,25,25]);
+  const [chamber, setChamber] = useState("all");
+  const [sortCol, setSortCol] = useState("master");
+  const [sortDir, setSortDir] = useState(-1);
+
+  const allKeys = useMemo(() => Object.keys(RAW), []);
+  const stats = useMemo(() => computeStats(allKeys), [allKeys]);
+  const allScores = useMemo(() => calcScores(allKeys, stats, weights), [allKeys, stats, weights]);
+
+  const filtered = useMemo(() => {
+    let rows = allScores;
+    if (chamber === "hd") rows = rows.filter(r => r.d.startsWith("HD"));
+    if (chamber === "sd") rows = rows.filter(r => r.d.startsWith("SD"));
+    return [...rows].sort((a,b) => {
+      const gi = GROUPS.findIndex(g => g.key === sortCol);
+      const va = gi >= 0 ? a.subs[gi] : a.master;
+      const vb = gi >= 0 ? b.subs[gi] : b.master;
+      return sortDir * (vb - va);
+    });
+  }, [allScores, chamber, sortCol, sortDir]);
+
+  const masterVals = filtered.map(r => r.master);
+  const mMax = Math.max(...masterVals), mMin = Math.min(...masterVals), mRange = mMax-mMin || 1;
+
+  function subRange(i) {
+    const vals = filtered.map(r => r.subs[i]);
+    const mn = Math.min(...vals), mx = Math.max(...vals);
+    return { mn, rng: mx-mn || 1 };
+  }
+
+  function toggleSort(col) {
+    if (sortCol === col) setSortDir(d => -d);
+    else { setSortCol(col); setSortDir(-1); }
+  }
+
+  const total = weights.reduce((a,b)=>a+b,0) || 1;
+  const pcts = weights.map(w => Math.round(w/total*100));
+
+  const presets = [
+    {label:"Equal",      w:[25,25,25,25]},
+    {label:"SES Heavy",  w:[60,10,20,10]},
+    {label:"Turnout",    w:[20,10,60,10]},
+    {label:"Entrenched", w:[20,10,20,50]},
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1">
-            Moho ʻĀina <span className="text-blue-400">District Dashboard</span>
-          </h1>
-          <p className="text-slate-400 text-sm md:text-base mb-4">
-            Top 5 districts per variable · Hawaiʻi 2024 Primary Data
-          </p>
-          {/* Chamber Toggle */}
-          <div className="inline-flex bg-slate-800 rounded-full p-1 gap-1">
-            {["HD","SD"].map(c => (
-              <button
-                key={c}
-                onClick={() => setChamber(c)}
-                className={`px-6 py-2 rounded-full font-bold text-sm transition-all ${
-                  chamber === c
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {c === "HD" ? "House (HD1–51)" : "Senate (SD1–25)"}
-              </button>
+    <div style={{padding:"24px 20px", maxWidth:960, margin:"0 auto"}}>
+
+      {/* Header */}
+      <div style={{marginBottom:24, borderBottom:"1px solid #1e2130", paddingBottom:18}}>
+        <div className="syne" style={{fontSize:26, fontWeight:800, letterSpacing:"-0.02em", color:"#f8fafc", lineHeight:1}}>
+          District Priority Index
+        </div>
+        <div style={{fontSize:11, color:"#475569", marginTop:6, letterSpacing:".07em"}}>
+          2024 PRIMARY · Z-SCORE COMPOSITE · HAWAII STATE LEGISLATURE · {filtered.length} DISTRICTS
+        </div>
+      </div>
+
+      {/* Weight Controls */}
+      <div style={{background:"#161922", border:"1px solid #1e2130", borderRadius:10, padding:"16px 20px", marginBottom:14}}>
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:8}}>
+          <span style={{fontSize:10, color:"#475569", letterSpacing:".09em", fontWeight:500}}>COMPOSITE WEIGHTS</span>
+          <div style={{display:"flex", gap:5, flexWrap:"wrap"}}>
+            {presets.map(p => (
+              <button key={p.label} className="btn" onClick={() => setWeights(p.w)}>{p.label}</button>
             ))}
           </div>
         </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {VARIABLES.map(v => (
-            <VarSection key={v.key} varDef={v} data={data[v.key]} />
+        <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px 28px"}}>
+          {GROUPS.map((g, i) => (
+            <div key={g.key}>
+              <div style={{display:"flex", justifyContent:"space-between", marginBottom:5}}>
+                <span style={{fontSize:11, color:g.accent, fontWeight:500}}>{g.label}</span>
+                <span style={{fontSize:11, color:"#94a3b8"}}>{pcts[i]}%</span>
+              </div>
+              <input type="range" min="0" max="100" value={weights[i]}
+                onChange={e => { const n=[...weights]; n[i]=+e.target.value; setWeights(n); }}
+                style={{background:`linear-gradient(to right,${g.accent} ${pcts[i]}%,#2d3748 ${pcts[i]}%)`}}
+              />
+              <div style={{fontSize:10, color:"#334155", marginTop:3}}>
+                {g.tips.join(" · ")}
+              </div>
+            </div>
           ))}
         </div>
-
-        <div className="text-center mt-8 text-slate-500 text-xs">
-          Data: U.S. Census ACS · Hawaiʻi OIP · Office of Elections · Compiled by AI Nā Votes
+        {/* Stacked bar */}
+        <div style={{marginTop:14, paddingTop:12, borderTop:"1px solid #1e2130", display:"flex", alignItems:"center", gap:10}}>
+          <span style={{fontSize:10, color:"#334155", whiteSpace:"nowrap"}}>NORMALIZED</span>
+          <div style={{display:"flex", flex:1, height:7, borderRadius:4, overflow:"hidden"}}>
+            {GROUPS.map((g, i) => (
+              <div key={g.key} style={{flex:pcts[i], background:g.accent, transition:"flex .3s ease"}} />
+            ))}
+          </div>
+          {GROUPS.map((g, i) => (
+            <span key={g.key} style={{fontSize:10, color:g.accent, whiteSpace:"nowrap"}}>{g.short} {pcts[i]}%</span>
+          ))}
         </div>
+      </div>
+
+      {/* Chamber Filter */}
+      <div style={{display:"flex", gap:6, marginBottom:12}}>
+        {[["all","ALL DISTRICTS"],["hd","HOUSE (HD)"],["sd","SENATE (SD)"]].map(([v,l]) => (
+          <button key={v} className={`btn${chamber===v?" active":""}`} onClick={() => setChamber(v)}>{l}</button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div style={{background:"#161922", border:"1px solid #1e2130", borderRadius:10, overflowX:"auto"}}>
+        <table style={{width:"100%", borderCollapse:"collapse", fontSize:12}}>
+          <thead>
+            <tr style={{borderBottom:"2px solid #1e2130"}}>
+              <th style={{padding:"10px 14px", textAlign:"left", color:"#334155", fontSize:10, letterSpacing:".08em", fontWeight:400}}>#</th>
+              <th style={{padding:"10px 14px", textAlign:"left", color:"#334155", fontSize:10, letterSpacing:".08em", fontWeight:400}}>DIST</th>
+              {GROUPS.map((g, i) => (
+                <th key={g.key} onClick={() => toggleSort(g.key)} className="thb"
+                  style={{padding:"10px 14px", textAlign:"left", color:sortCol===g.key?g.accent:"#475569",
+                    fontSize:10, letterSpacing:".08em", fontWeight:400, whiteSpace:"nowrap", transition:"color .15s"}}>
+                  {g.short}{sortCol===g.key ? (sortDir===-1?" ↓":" ↑") : ""}
+                </th>
+              ))}
+              <th onClick={() => toggleSort("master")} className="thb"
+                style={{padding:"10px 14px", textAlign:"left",
+                  color:sortCol==="master"?"#e2e8f0":"#475569",
+                  fontSize:10, letterSpacing:".08em", fontWeight:400, whiteSpace:"nowrap", transition:"color .15s"}}>
+                MASTER{sortCol==="master" ? (sortDir===-1?" ↓":" ↑") : ""}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((row, rank) => {
+              const t = (row.master - mMin) / mRange;
+              const bc = heatColor(t);
+              return (
+                <tr key={row.d} className="rh" style={{borderBottom:"1px solid #0f1117", transition:"background .1s"}}>
+                  <td style={{padding:"8px 14px", color:"#334155", fontSize:11}}>{rank+1}</td>
+                  <td style={{padding:"8px 14px"}}>
+                    <span className="pill" style={{
+                      background: row.d.startsWith("SD") ? "rgba(99,102,241,0.15)" : "rgba(244,63,94,0.12)",
+                      color: row.d.startsWith("SD") ? "#818cf8" : "#fb7185"
+                    }}>{row.d}</span>
+                  </td>
+                  {row.subs.map((s, i) => {
+                    const {mn, rng} = subRange(i);
+                    const pct = Math.max(0, Math.min(100, ((s-mn)/rng)*100));
+                    return (
+                      <td key={i} style={{padding:"8px 14px"}}>
+                        <div style={{display:"flex", alignItems:"center", gap:6}}>
+                          <div style={{width:44, height:3, background:"#1e2130", borderRadius:2, overflow:"hidden"}}>
+                            <div style={{width:`${pct}%`, height:"100%", background:GROUPS[i].accent, opacity:.75, transition:"width .3s"}} />
+                          </div>
+                          <span style={{color:s>0?"#cbd5e1":"#475569", fontSize:11, width:36, textAlign:"right", fontVariantNumeric:"tabular-nums"}}>
+                            {s>0?"+":""}{s.toFixed(2)}
+                          </span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                  <td style={{padding:"8px 14px"}}>
+                    <div style={{display:"flex", alignItems:"center", gap:8}}>
+                      <div style={{width:60, height:5, background:"#1e2130", borderRadius:3, overflow:"hidden"}}>
+                        <div style={{width:`${Math.max(2, t*100)}%`, height:"100%", background:bc, borderRadius:3, transition:"width .3s, background .3s"}} />
+                      </div>
+                      <span style={{color:bc, fontWeight:500, fontSize:12, width:40, textAlign:"right", fontVariantNumeric:"tabular-nums"}}>
+                        {row.master>0?"+":""}{row.master.toFixed(2)}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{marginTop:12, fontSize:10, color:"#334155", textAlign:"center", letterSpacing:".05em", lineHeight:1.8}}>
+        HIGHER SCORE = HIGHER ORGANIZING PRIORITY · SORT ANY COLUMN HEADER · Z-SCORES COMPUTED ACROSS ALL 76 DISTRICTS<br/>
+        SES: poverty, education, health ins, income, SNAP · DIG: no computer · CIV: turnout (reg+elig, inverted) + reg–elig gap · INC: incumbent tenure
       </div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
